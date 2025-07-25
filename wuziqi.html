@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>五子棋双人对战</title>
+    <style>
+        body { font-family: '微软雅黑', Arial, sans-serif; background: #f5f5f5; text-align: center; }
+        h1 { margin-top: 20px; }
+        #board { display: inline-block; margin-top: 20px; border: 2px solid #333; background: #fff; }
+        .row { display: flex; }
+        .cell {
+            width: 32px; height: 32px;
+            border: 1px solid #bbb;
+            box-sizing: border-box;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; cursor: pointer;
+            background: #f9e7b3;
+            transition: background 0.2s;
+        }
+        .cell:hover { background: #ffe066; }
+        .cell.x { color: #222; }
+        .cell.o { color: #b22222; }
+        #info { margin: 20px 0 10px 0; font-size: 18px; }
+        #reset { margin-top: 10px; padding: 6px 18px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <h1>五子棋双人对战</h1>
+    <div id="info">当前回合：<span id="player">X</span></div>
+    <div id="board"></div>
+    <button id="reset">重新开始</button>
+    <script>
+        const SIZE = 15;
+        let board = [];
+        let currentPlayer = 'X';
+        let gameOver = false;
+        const boardDiv = document.getElementById('board');
+        const infoDiv = document.getElementById('info');
+        const playerSpan = document.getElementById('player');
+        const resetBtn = document.getElementById('reset');
+
+        function initBoard() {
+            board = Array.from({length: SIZE}, () => Array(SIZE).fill(''));
+            boardDiv.innerHTML = '';
+            for (let y = 0; y < SIZE; y++) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'row';
+                for (let x = 0; x < SIZE; x++) {
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = 'cell';
+                    cellDiv.dataset.x = x;
+                    cellDiv.dataset.y = y;
+                    cellDiv.addEventListener('click', onCellClick);
+                    rowDiv.appendChild(cellDiv);
+                }
+                boardDiv.appendChild(rowDiv);
+            }
+            currentPlayer = 'X';
+            gameOver = false;
+            playerSpan.textContent = currentPlayer;
+            infoDiv.textContent = '当前回合：' + currentPlayer;
+        }
+
+        function onCellClick(e) {
+            if (gameOver) return;
+            const x = +this.dataset.x;
+            const y = +this.dataset.y;
+            if (board[y][x]) return;
+            board[y][x] = currentPlayer;
+            this.classList.add(currentPlayer.toLowerCase());
+            this.textContent = currentPlayer;
+            if (checkWin(x, y, currentPlayer)) {
+                infoDiv.textContent = `玩家 ${currentPlayer} 获胜！`;
+                gameOver = true;
+                return;
+            }
+            if (board.flat().every(cell => cell)) {
+                infoDiv.textContent = '平局！棋盘已满。';
+                gameOver = true;
+                return;
+            }
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            playerSpan.textContent = currentPlayer;
+            infoDiv.textContent = '当前回合：' + currentPlayer;
+        }
+
+        function checkWin(x, y, player) {
+            const directions = [
+                [1, 0], [0, 1], [1, 1], [1, -1]
+            ];
+            for (const [dx, dy] of directions) {
+                let count = 1;
+                for (const dir of [1, -1]) {
+                    let nx = x, ny = y;
+                    while (true) {
+                        nx += dx * dir;
+                        ny += dy * dir;
+                        if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) break;
+                        if (board[ny][nx] === player) {
+                            count++;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                if (count >= 5) return true;
+            }
+            return false;
+        }
+
+        resetBtn.onclick = initBoard;
+        window.onload = initBoard;
+    </script>
+</body>
+</html> 
